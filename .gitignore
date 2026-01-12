@@ -36,3 +36,6 @@ wheels/
 # OS
 .DS_Store
 Thumbs.db
+
+# Local databases (user data)
+trips_database.db
