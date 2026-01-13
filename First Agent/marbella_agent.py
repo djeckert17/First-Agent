@@ -1,13 +1,12 @@
 """
 Marbella Travel Planning Agent
-A stateless travel agent using Claude Agent SDK's query() approach.
-Each query is independent with no conversation memory.
+A travel agent using Claude Agent SDK's ClaudeSDKClient for custom MCP tools support.
 """
 
 import asyncio
 import os
 from dotenv import load_dotenv
-from claude_agent_sdk import query, ClaudeAgentOptions, AssistantMessage, TextBlock
+from claude_agent_sdk import ClaudeSDKClient, ClaudeAgentOptions, AssistantMessage, TextBlock
 from tools import travel_tools_server
 
 # Load environment variables
@@ -22,8 +21,7 @@ async def plan_trip(prompt: str) -> str:
     """
     Send a travel planning query to Claude.
 
-    This uses the stateless query() approach - each call creates a new session
-    with no memory of previous interactions.
+    This uses ClaudeSDKClient which supports custom MCP tools.
 
     Args:
         prompt: The travel planning question or request
@@ -80,15 +78,17 @@ async def plan_trip(prompt: str) -> str:
         permission_mode='default'
     )
 
-    # Query Claude with the stateless approach
+    # Use ClaudeSDKClient which supports custom MCP tools
     response_text = ""
 
-    async for message in query(prompt=prompt, options=options):
-        # Extract text from assistant messages
-        if isinstance(message, AssistantMessage):
-            for block in message.content:
-                if isinstance(block, TextBlock):
-                    response_text += block.text
+    async with ClaudeSDKClient(options=options) as client:
+        await client.query(prompt)
+        async for message in client.receive_response():
+            # Extract text from assistant messages
+            if isinstance(message, AssistantMessage):
+                for block in message.content:
+                    if isinstance(block, TextBlock):
+                        response_text += block.text
 
     return response_text
 
